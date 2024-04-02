@@ -20,7 +20,7 @@ export default class FollowList {
   /* Set the list of user IDs to display. users is an Array of strings. */
   setList(users) {
     this._list.textContent = "";
-    for (let user of users) {
+    users.forEach((user) => {
       let li = document.createElement("li");
       let text = document.createElement("span");
       text.classList.add("text");
@@ -37,7 +37,7 @@ export default class FollowList {
       li.append(button);
 
       this._list.append(li);
-    }
+    });
   }
 
   /* Create the DOM elements for this component, storing them in instance variables. */

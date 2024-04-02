@@ -30,6 +30,7 @@ const createUser = async (req, res) => {
 const getListUser = async (req, res) => {
   try {
     const users = await User.find();
+    
     return responseHandler.ok(res, users);
   } catch (error) {
     console.error("Error getting user list:", error);
@@ -111,6 +112,9 @@ const addFollow = async (req, res) => {
     const user = await User.findOne({ id: userId });
     if (!user) {
       return responseHandler.notfound(res);
+    }
+    if (user.following.includes(id)) {
+      return responseHandler.error(res, 'User is already followed');
     }
     user.following.push(id);
     await user.save();

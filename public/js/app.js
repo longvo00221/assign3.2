@@ -3,13 +3,16 @@ import User, { Post } from "./user.js";
 
 export default class App {
   constructor() {
-    /* Store the currently logged-in user. */
     this._user = null;
     this._loginForm = document.querySelector("#loginForm");
     this._profileForm = document.querySelector("#editPanel");
     this._postForm = document.querySelector("#postForm");
     this._followContainer = document.querySelector("#followContainer");
-
+    this._listUsersButton = document.querySelector('button[name="listUsers"]');
+    this._listUsersButton.addEventListener(
+      "click",
+      this._onListUsers.bind(this)
+    );
     this._followList = new FollowList(
       this._followContainer,
       this._onFollowAdd.bind(this),
@@ -23,15 +26,27 @@ export default class App {
     );
     this._postForm.addEventListener("submit", this._onMakePost.bind(this));
   }
+  async _onChangeProfile(event) {
+    event.preventDefault();
+    let newName = this._profileForm.querySelector("#nameInput").value;
+    let newAvatarURL = this._profileForm.querySelector("#avatarInput").value;
 
-  /*** Event handlers ***/
+    this._user.name = newName;
+    this._user.avatarURL = newAvatarURL;
+
+    try {
+      await this._user.changeProfile(newName, newAvatarURL);
+      await this._loadProfile();
+    } catch (error) {
+      console.error("Error saving profile:", error);
+    }
+  }
   async _onLogin(event) {
     event.preventDefault();
     let userId = this._loginForm.userid.value;
     this._user = await User.loadOrCreate(userId);
     await this._loadProfile();
   }
-
   async _onSaveProfile(event) {
     event.preventDefault();
     let newName = this._profileForm.querySelector("#nameInput").value;
@@ -78,46 +93,47 @@ export default class App {
   }
 
   async _onListUsers() {
-   
     let users = await User.listUsers();
-    let usersStr = users.join("\n");
+
+    let usersStr =""
+    users.map((user) => {
+      usersStr += `${user.id} - ${user.name}\n`
+    })
     alert(`List of users:\n\n${usersStr}`);
   }
 
   _displayFeed(feed) {
-    document.querySelector("#feed").innerHTML = ""; // Xóa feed hiện tại
+    document.querySelector("#feed").innerHTML = "";
+    document.querySelector(".postHeader .name").textContent = this._user.name;
+    document.querySelector(".postHeader .userid").textContent = this._user.id;
+    document.querySelector("#avatarUser").src = this._user.avatarURL;
     feed.forEach((post) => {
+      console.log(post);
       this._displayPost(post);
     });
   }
   _displayPost(post) {
-    let template = document.querySelector("#templatePost");
+    let template = document.querySelector("#templatePost").cloneNode(true);
     template.style.display = "block";
-    template.querySelector(".avatar").src = post.user.avatarURL;
-    template.querySelector(".name").textContent = post.user.name;
-    template.querySelector(".userid").textContent = post.user.id;
+    template.querySelector(".avatar").src = this._user.avatarURL;
+    template.querySelector(".name").textContent = this._user.name;
+    template.querySelector(".userid").textContent = this._user.id;
     template.querySelector(".time").textContent = post.time.toLocaleString();
-    template.querySelector(".text").textContent = post.text;
+    template.querySelector(".textPost").textContent = post.text;
     document.querySelector("#feed").appendChild(template);
   }
 
-  /* Load (or reload) a user's profile. Assumes that this._user has been set to a User instance. */
   async _loadProfile() {
     document.querySelector("#welcome").classList.add("hidden");
     document.querySelector("#main").classList.remove("hidden");
     document.querySelector("#idContainer").textContent = this._user.id;
-
-    // Cập nhật thông tin hồ sơ
     this._profileForm.querySelector("#nameInput").value = this._user.name;
     this._profileForm.querySelector("#avatarInput").value =
       this._user.avatarURL;
-
-    // Hiển thị danh sách theo dõi
     this._followList.setList(this._user.following);
-
-    // Lấy feed của người dùng
     try {
       let feed = await this._user.getFeed();
+
       this._displayFeed(feed);
     } catch (error) {
       console.error("Error loading user feed:", error);
