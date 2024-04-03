@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+import 'dotenv'
 import path from 'path';
 import routes from './routes/index.js';
 import connectDb from './mongodbConn/MongodbConnection.js';
