@@ -1,6 +1,7 @@
 import apiRequest from "./apirequest.js";
 export class Post {
   constructor(data) {
+    this.userId = data.userId;
     this.time = new Date(data.time);
     this.text = data.text;
   }
@@ -53,7 +54,7 @@ export default class User {
   async getFeed() {
     try {
       let data = await apiRequest("GET", `/users/${this.id}/feed`);
-
+    
       return data.map((postData) => {
         return new Post(postData);
       });
@@ -73,6 +74,7 @@ export default class User {
   async addFollow(id) {
     try {
       await apiRequest("POST", `/users/${this.id}/follow`, { id });
+      this.following.push(id);
     } catch (error) {
       console.error("Error adding follow:", error);
       throw error;
@@ -81,6 +83,7 @@ export default class User {
   async deleteFollow(id) {
     try {
       await apiRequest("DELETE", `/users/${this.id}/follow`, { id });
+      this.following = this.following.filter((followId) => followId !== id);
     } catch (error) {
       console.error("Error deleting follow:", error);
       throw error;

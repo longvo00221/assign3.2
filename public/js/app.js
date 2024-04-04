@@ -95,10 +95,10 @@ export default class App {
   async _onListUsers() {
     let users = await User.listUsers();
 
-    let usersStr =""
+    let usersStr = "";
     users.map((user) => {
-      usersStr += `${user.id} - ${user.name}\n`
-    })
+      usersStr += `${user.id} - ${user.name}\n`;
+    });
     alert(`List of users:\n\n${usersStr}`);
   }
 
@@ -112,12 +112,13 @@ export default class App {
       this._displayPost(post);
     });
   }
-  _displayPost(post) {
+  async _displayPost(post) {
+    let postUser = await User.loadOrCreate(post.userId);
     let template = document.querySelector("#templatePost").cloneNode(true);
     template.style.display = "block";
-    template.querySelector(".avatar").src = this._user.avatarURL;
-    template.querySelector(".name").textContent = this._user.name;
-    template.querySelector(".userid").textContent = this._user.id;
+    template.querySelector(".avatar").src = postUser.avatarURL;
+    template.querySelector(".name").textContent = postUser.name;
+    template.querySelector(".userid").textContent = postUser.id;
     template.querySelector(".time").textContent = post.time.toLocaleString();
     template.querySelector(".textPost").textContent = post.text;
     document.querySelector("#feed").appendChild(template);
@@ -131,12 +132,22 @@ export default class App {
     this._profileForm.querySelector("#avatarInput").value =
       this._user.avatarURL;
     this._followList.setList(this._user.following);
+    await this._loadFollowedUsersFeed();
     try {
       let feed = await this._user.getFeed();
 
       this._displayFeed(feed);
     } catch (error) {
       console.error("Error loading user feed:", error);
+    }
+  }
+  async _loadFollowedUsersFeed() {
+    if (this._user.following.length > 0) {
+      for (let followedUserId of this._user.following) {
+        let followedUser = await User.loadOrCreate(followedUserId);
+        let feed = await followedUser.getFeed();
+        this._displayFeed(feed);
+      }
     }
   }
 }
