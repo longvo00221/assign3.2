@@ -5,8 +5,13 @@ export class Post {
     this.text = data.text;
   }
 }
-
 export default class User {
+  constructor(data) {
+    this.id = data.id;
+    this.name = data.name;
+    this.avatarURL = data.avatarURL;
+    this.following = data.following || [];
+  }
   static async listUsers() {
     let data = await apiRequest("GET", "/users");
     return data.users;
@@ -21,12 +26,6 @@ export default class User {
       await newUser.save();
       return newUser;
     }
-  }
-  constructor(data) {
-    this.id = data.id;
-    this.name = data.name;
-    this.avatarURL = data.avatarURL;
-    this.following = data.following || []; 
   }
 
   toString() {
@@ -87,23 +86,26 @@ export default class User {
       throw error;
     }
   }
-  async changeProfile(name,avatar){
+  async changeProfile(name, avatar) {
     this.name = name;
     this.avatarURL = avatar;
     try {
-      await apiRequest("PATCH",`/users/${this.id}`,{
+      await apiRequest("PATCH", `/users/${this.id}`, {
         name: this.name,
-        avatarURL: this.avatarURL
-      })
+        avatarURL: this.avatarURL,
+      });
     } catch (error) {
       console.error("Error saving profile:", error);
       throw error;
     }
   }
   static async listUsers() {
-    const response = await fetch('/api/users');
+    const response = await fetch("/api/users");
     const users = await response.json();
-    const simplifiedUsers = users.map(user => ({ id: user.id, name: user.name }));
+    const simplifiedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.name,
+    }));
 
     return simplifiedUsers;
   }

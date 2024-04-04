@@ -19,6 +19,8 @@ const userSchema = new mongoose.Schema({
     default: [],
     set: ids => [...new Set(ids)] // Ensure only unique IDs
   }
+},{
+  timestamps: true.valueOf()
 });
 
 const User = mongoose.model('User', userSchema);
